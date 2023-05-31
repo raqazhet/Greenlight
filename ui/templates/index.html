@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../style/style.css">
+    <!-- <script src="/ui/js/main.js"></script> -->
+    <title>Forum</title>
+</head>
+<body>
+
+  <header id="header">
+    <div class="top">
+      <div class="logo">Forum</div>
+      <nav class="navbar">
+        <ul class="nav-links">
+          <li><a href="">Home</a></li>
+          <li>|</li>
+          <li class="categories"><a href="">Categories</a></li>
+
+          <li><a href="/ui/templates/sign-in.html" class="btn btn-outline-primary mx-1">Sign In</a></li>
+          <li>|</li>
+          <li><a href="/ui/templates/sign-up.html" class="btn btn-outline-primary mx-1">Sign Up</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  
+  <div class="main">
+
+    <div class="AllMovies">
+      <a href="">
+      <div id="movieCard">
+        <img src="" alt="">
+        <h2></h2>
+      </div>
+      </a>
+    </div>
+
+  </div>
+
+  </div> 
+  <script>
+    fetch('https://randomuser.me/api:4000/v1/home')
+    .then(response => response.json())
+    .then(data => {
+      const jsonString = JSON.stringify(data);
+      document.getElementById("movieCard").innerHTML = jsonString;
+      console.log(data);
+    })
+    .catch(error => {
+      console.error(error)
+    });
+  </script>
+</body>
+</html>
