@@ -18,7 +18,9 @@ func (app *application) router() http.Handler {
 	// Add the route for the POST /v1/users endpoint.
 	mux.HandleFunc("/v1/users", app.registerUserHandler)
 	mux.HandleFunc("/v1/users/activated", app.activateUserHandler)
+	mux.HandleFunc("/v1/users/password", app.updateUserPasswordHandler)
 	mux.HandleFunc("/v1/tokens/authentication", app.createAuthenticationTokenHandler)
+	mux.HandleFunc("/v1/tokens/password-reset", app.createPasswordResetTokenHandler)
 	// Reagister a new Get /debug/vars endpont pointing to the expvar handler
 	mux.Handle("/v1/metrics", expvar.Handler())
 	return app.metrics(app.recoverPanic(app.enableCORS(app.authenticate(mux))))

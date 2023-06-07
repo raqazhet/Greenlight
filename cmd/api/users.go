@@ -155,3 +155,65 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 		app.serverErrorResponse(w, r, err)
 	}
 }
+
+func (app *application) updateUserPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		password string `json:"password"`
+		token    string `json:"token"`
+	}
+	err := app.readJson(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+	v := validator.New()
+	data.ValidatePasswordPlaintext(v, input.password)
+	data.ValidateTokenPlainText(v, input.token)
+	if v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+	// Retrieve the details of the user associated with the password reset token,
+	// returning an error message if no matching record was found.
+	user, err := app.models.Users.GetForToken(data.ScopePasswordReset, input.token)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			v.AddError("token", "invalid or expired password reset token")
+			app.failedValidationResponse(w, r, v.Errors)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+	// Set the new password for the user.
+	err = user.Password.Set(input.password)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+	// Save the updated user record in our database, checking for any edit conflicts as
+	// normal.
+	err = app.models.Users.Update(user)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrEditConflict):
+			app.editConflictResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+	// If everything was successful, then delete all password reset tokens for the user.
+	err = app.models.Tokens.DeleteAllForUser(data.ScopePasswordReset, user.ID)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+	// Send the user a confirmation message.
+	env := envelope{"message": "your password was successfully reset"}
+	err = app.writeJson(w, http.StatusOK, env, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
